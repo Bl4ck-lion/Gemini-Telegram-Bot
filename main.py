@@ -7,13 +7,13 @@ import telebot
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import  Message
 
-alvatar_player_dict = {}
+gemini_player_dict = {}
 gemini_pro_player_dict = {}
 default_model_dict = {}
 
-error_info="⚠️⚠️⚠️\n Ada suatu gangguan !\nCoba ulangi lagi atau hubungi ramaa !"
-before_generate_info="🤖Sabarr🤖"
-download_pic_notify="🤖Loading Bang🤖"
+error_info="⚠️⚠️⚠️\nSomething went wrong !\nplease try to change your prompt or contact the admin !"
+before_generate_info="🤖Generating🤖"
+download_pic_notify="🤖Loading picture🤖"
 
 n = 10  #Number of historical records to keep
 
@@ -134,12 +134,12 @@ def escape(text, flag=0):
     return text
 
 # Prevent "create_convo" function from blocking the event loop.
-async def make_new_alvatar_convo():
+async def make_new_gemini_convo():
     loop = asyncio.get_running_loop()
 
     def create_convo():
         model = genai.GenerativeModel(
-            model_name="alvatar-pro",
+            model_name="gemini-pro",
             generation_config=generation_config,
             safety_settings=safety_settings,
         )
@@ -150,7 +150,7 @@ async def make_new_alvatar_convo():
     convo = await loop.run_in_executor(None, create_convo)
     return convo
 
-async def make_new_alvatar_pro_convo():
+async def make_new_gemini_pro_convo():
     loop = asyncio.get_running_loop()
 
     def create_convo():
@@ -181,13 +181,13 @@ async def async_generate_content(model, contents):
     response = await loop.run_in_executor(None, generate)
     return response
 
-async def alvatar(bot,message,m):
+async def gemini(bot,message,m):
     player = None
-    if str(message.from_user.id) not in alvatar_player_dict:
-        player = await make_new_alvatar_convo()
-        alvatar_player_dict[str(message.from_user.id)] = player
+    if str(message.from_user.id) not in gemini_player_dict:
+        player = await make_new_gemini_convo()
+        gemini_player_dict[str(message.from_user.id)] = player
     else:
-        player = alvatar_player_dict[str(message.from_user.id)]
+        player = gemini_player_dict[str(message.from_user.id)]
     if len(player.history) > n:
         player.history = player.history[2:]
     try:
@@ -202,13 +202,13 @@ async def alvatar(bot,message,m):
         traceback.print_exc()
         await bot.edit_message_text(error_info, chat_id=sent_message.chat.id, message_id=sent_message.message_id)
 
-async def alvatar_pro(bot,message,m):
+async def gemini_pro(bot,message,m):
     player = None
-    if str(message.from_user.id) not in alvatar_pro_player_dict:
-        player = await make_new_alvatar_pro_convo()
-        alvatar_pro_player_dict[str(message.from_user.id)] = player
+    if str(message.from_user.id) not in gemini_pro_player_dict:
+        player = await make_new_gemini_pro_convo()
+        gemini_pro_player_dict[str(message.from_user.id)] = player
     else:
-        player = alvatar_pro_player_dict[str(message.from_user.id)]
+        player = gemini_pro_player_dict[str(message.from_user.id)]
     if len(player.history) > n:
         player.history = player.history[2:]
     try:
@@ -239,8 +239,8 @@ async def main():
     await bot.set_my_commands(
         commands=[
             telebot.types.BotCommand("start", "Start"),
-            telebot.types.BotCommand("alvatar", "using model:gemini-pro-1.0"),
-            telebot.types.BotCommand("alvatar_pro", "using model:gemini-pro-1.5"),
+            telebot.types.BotCommand("gemini", "using model:gemini-pro-1.0"),
+            telebot.types.BotCommand("gemini_pro", "using model:gemini-pro-1.5"),
             telebot.types.BotCommand("clear", "Clear all history"),
             telebot.types.BotCommand("switch","switch default model")
         ],
@@ -249,77 +249,77 @@ async def main():
 
     # Init commands
     @bot.message_handler(commands=["start"])
-    async def alvatar_handler(message: Message):
+    async def gemini_handler(message: Message):
         try:
-            await bot.reply_to( message , escape("Halo bang, sekarang kamu bisa nanyain aku apa pun. \nFor example: `Siapa itu Rama Agung Supriyadi?`"), parse_mode="MarkdownV2")
+            await bot.reply_to( message , escape("Welcome, you can ask me questions now. \nFor example: `Who is john lennon?`"), parse_mode="MarkdownV2")
         except IndexError:
             await bot.reply_to(message, error_info)
 
-    @bot.message_handler(commands=["alvatar"])
-    async def alvatar_handler(message: Message):
+    @bot.message_handler(commands=["gemini"])
+    async def gemini_handler(message: Message):
         try:
             m = message.text.strip().split(maxsplit=1)[1].strip()
         except IndexError:
-            await bot.reply_to( message , escape("Plis ketik pertanyaanmu setelah  /alvatar. \nFor example: `/alvatar Siapa itu Rama Agung Supriyadi?`"), parse_mode="MarkdownV2")
+            await bot.reply_to( message , escape("Please add what you want to say after /gemini. \nFor example: `/gemini Who is john lennon?`"), parse_mode="MarkdownV2")
             return
-        await alvatar(bot,message,m)
+        await gemini(bot,message,m)
 
-    @bot.message_handler(commands=["alvatar_pro"])
-    async def alvatar_handler(message: Message):
+    @bot.message_handler(commands=["gemini_pro"])
+    async def gemini_handler(message: Message):
         try:
             m = message.text.strip().split(maxsplit=1)[1].strip()
         except IndexError:
-            await bot.reply_to( message , escape("Plis ketik pertanyaanmu setelah  /alvatar_pro. \nFor example: `/alvatar_pro Rama Agung Supriyadi?`"), parse_mode="MarkdownV2")
+            await bot.reply_to( message , escape("Please add what you want to say after /gemini_pro. \nFor example: `/gemini_pro Who is john lennon?`"), parse_mode="MarkdownV2")
             return
-        await alvatar_pro(bot,message,m)
+        await gemini_pro(bot,message,m)
             
     @bot.message_handler(commands=["clear"])
-    async def alvatar_handler(message: Message):
-        # Check if the player is already in alvatar_player_dict.
-        if (str(message.from_user.id) in alvatar_player_dict):
-            del alvatar_player_dict[str(message.from_user.id)]
-        if (str(message.from_user.id) in alvatar_pro_player_dict):
-            del alvatar_pro_player_dict[str(message.from_user.id)]
+    async def gemini_handler(message: Message):
+        # Check if the player is already in gemini_player_dict.
+        if (str(message.from_user.id) in gemini_player_dict):
+            del gemini_player_dict[str(message.from_user.id)]
+        if (str(message.from_user.id) in gemini_pro_player_dict):
+            del gemini_pro_player_dict[str(message.from_user.id)]
         await bot.reply_to(message, "Your history has been cleared")
 
     @bot.message_handler(commands=["switch"])
-    async def alvatar_handler(message: Message):
+    async def gemini_handler(message: Message):
         if message.chat.type != "private":
             await bot.reply_to( message , "This command is only for private chat !")
             return
         # Check if the player is already in default_model_dict.
         if str(message.from_user.id) not in default_model_dict:
             default_model_dict[str(message.from_user.id)] = False
-            await bot.reply_to( message , "Now you are using alvatar-pro:1.5")
+            await bot.reply_to( message , "Now you are using gemini-pro:1.5")
             return
         if default_model_dict[str(message.from_user.id)] == True:
             default_model_dict[str(message.from_user.id)] = False
-            await bot.reply_to( message , "Now you are using alvatar-pro:1.5")
+            await bot.reply_to( message , "Now you are using gemini-pro:1.5")
         else:
             default_model_dict[str(message.from_user.id)] = True
-            await bot.reply_to( message , "Now you are using alvatar-pro:1.0")
+            await bot.reply_to( message , "Now you are using gemini-pro:1.0")
         
     
     
     @bot.message_handler(func=lambda message: message.chat.type == "private", content_types=['text'])
-    async def alvatar_private_handler(message: Message):
+    async def gemini_private_handler(message: Message):
         m = message.text.strip()
 
         if str(message.from_user.id) not in default_model_dict:
             default_model_dict[str(message.from_user.id)] = True
-            await alvatar(bot,message,m)
+            await gemini(bot,message,m)
         else:
             if default_model_dict[str(message.from_user.id)]:
-                await alvatar(bot,message,m)
+                await gemini(bot,message,m)
             else:
-                await alvatar_pro(bot,message,m)
+                await gemini_pro(bot,message,m)
 
 
     @bot.message_handler(content_types=["photo"])
-    async def alvatar_photo_handler(message: Message) -> None:
+    async def gemini_photo_handler(message: Message) -> None:
         if message.chat.type != "private":
             s = message.caption
-            if not s or not (s.startswith("/alvatar")):
+            if not s or not (s.startswith("/gemini")):
                 return
             try:
                 prompt = s.strip().split(maxsplit=1)[1].strip() if len(s.strip().split(maxsplit=1)) > 1 else ""
@@ -329,7 +329,7 @@ async def main():
             except Exception:
                 traceback.print_exc()
                 await bot.reply_to(message, error_info)
-            model = genai.GenerativeModel("alvatar-pro-vision")
+            model = genai.GenerativeModel("gemini-pro-vision")
             contents = {
                 "parts": [{"mime_type": "image/jpeg", "data": downloaded_file}, {"text": prompt}]
             }
@@ -363,7 +363,7 @@ async def main():
                 await bot.edit_message_text(error_info, chat_id=sent_message.chat.id, message_id=sent_message.message_id)
 
     # Start bot
-    print("Starting alvatar_Telegram_Bot.")
+    print("Starting Gemini_Telegram_Bot.")
     await bot.polling(none_stop=True)
 
 if __name__ == '__main__':
